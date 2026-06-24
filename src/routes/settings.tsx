@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { loadSettings, saveSettings, defaultSettings, clearHistory, type AppSettings } from "@/lib/storage";
+import { Slider } from "@/components/ui/slider";
+import { loadSettings, saveSettings, defaultSettings, clearHistory, creativityToTemperature, type AppSettings } from "@/lib/storage";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -74,6 +75,56 @@ function SettingsPage() {
               </SelectContent>
             </Select>
           </Row>
+          <Row label="Voice / persona">
+            <Select
+              value={s.persona}
+              onValueChange={(v) => update("persona", v as AppSettings["persona"])}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="neutral">Neutral pro</SelectItem>
+                <SelectItem value="executive">Executive</SelectItem>
+                <SelectItem value="friendly">Friendly</SelectItem>
+                <SelectItem value="academic">Academic</SelectItem>
+                <SelectItem value="creative">Creative</SelectItem>
+              </SelectContent>
+            </Select>
+          </Row>
+          <Row label="Formatting style">
+            <Select
+              value={s.formatStyle}
+              onValueChange={(v) => update("formatStyle", v as AppSettings["formatStyle"])}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="plain">Plain prose</SelectItem>
+                <SelectItem value="bulleted">Bulleted</SelectItem>
+                <SelectItem value="structured">Structured (headings)</SelectItem>
+              </SelectContent>
+            </Select>
+          </Row>
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Creativity</Label>
+              <span className="text-xs text-muted-foreground">
+                {s.creativity}% · temp {creativityToTemperature(s.creativity)}
+              </span>
+            </div>
+            <Slider
+              value={[s.creativity]}
+              min={0}
+              max={100}
+              step={5}
+              onValueChange={(v) => update("creativity", v[0])}
+            />
+            <div className="flex justify-between text-[11px] text-muted-foreground">
+              <span>Precise</span><span>Balanced</span><span>Inventive</span>
+            </div>
+          </div>
           <Row label="Default export format">
             <Select
               value={s.exportFormat}

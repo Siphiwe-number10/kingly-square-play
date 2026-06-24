@@ -5,6 +5,7 @@ const Input = z.object({
   system: z.string().min(1).max(4000),
   prompt: z.string().min(1).max(20000),
   maxTokens: z.number().int().positive().max(8000).optional(),
+  temperature: z.number().min(0).max(2).optional(),
 });
 
 export const generateAI = createServerFn({ method: "POST" })
@@ -26,6 +27,7 @@ export const generateAI = createServerFn({ method: "POST" })
           { role: "user", content: data.prompt },
         ],
         max_tokens: data.maxTokens ?? 2048,
+        temperature: data.temperature ?? 0.7,
       }),
     });
 
