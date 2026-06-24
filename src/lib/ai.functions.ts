@@ -40,10 +40,30 @@ const MeetingInput = z.object({
 const Input = z.discriminatedUnion("kind", [EmailInput, ResearchInput, MeetingInput]);
 type ParsedInput = z.infer<typeof Input>;
 
-function lengthHint(s: z.infer<typeof ResponseLength>) {
-  if (s === "short") return "Keep it concise — under 150 words.";
-  if (s === "long") return "Be thorough and detailed — 400-700 words.";
-  return "Aim for a balanced length — around 250 words.";
+function lengthSpec(s: z.infer<typeof ResponseLength>) {
+  if (s === "short") {
+    return {
+      hint: "STRICT LENGTH REQUIREMENT: The total response MUST be between 80 and 150 words. Do not exceed 150 words under any circumstances. Be concise and omit non-essential detail.",
+      maxTokens: 350,
+    };
+  }
+  if (s === "long") {
+    return {
+      hint: "STRICT LENGTH REQUIREMENT: The total response MUST be between 500 and 800 words. Be thorough and detailed, expanding each section.",
+      maxTokens: 1800,
+    };
+  }
+  return {
+    hint: "STRICT LENGTH REQUIREMENT: The total response MUST be between 200 and 320 words. Keep it balanced — neither terse nor exhaustive.",
+    maxTokens: 800,
+  };
+}
+
+// Map the email-specific length control to the same response-length scale.
+function emailLengthToResponseLength(l: "Short" | "Medium" | "Long"): z.infer<typeof ResponseLength> {
+  if (l === "Short") return "short";
+  if (l === "Long") return "long";
+  return "medium";
 }
 function personaHint(p: z.infer<typeof Persona>) {
   switch (p) {
@@ -68,7 +88,11 @@ function creativityToTemperature(c: number) {
 
 function buildRequest(data: ParsedInput): { system: string; prompt: string; maxTokens: number } {
   const s = data.settings;
-  const tail = ` ${lengthHint(s.responseLength)} ${personaHint(s.persona)} ${formatHint(s.formatStyle)}`;
+  // For emails the user picks a length directly on the form — honor that over the global setting.
+  const effectiveLength =
+    data.kind === "email" ? emailLengthToResponseLength(data.length) : s.responseLength;
+  const lenSpec = lengthSpec(effectiveLength);
+  const tail = ` ${lenSpec.hint} ${personaHint(s.persona)} ${formatHint(s.formatStyle)}`;
   if (data.kind === "email") {
     const system =
       "You are an expert business email writer. Always produce a complete, well-structured email with these clearly labeled sections on separate lines: Subject:, Greeting:, Body:, Call to Action:, Closing:." + tail;
@@ -78,7 +102,7 @@ function buildRequest(data: ParsedInput): { system: string; prompt: string; maxT
       `Recipient position: ${data.position || "(unspecified)"}\n` +
       `Purpose: ${data.purpose}\n` +
       `Key points:\n${data.points || "(none provided)"}`;
-    return { system, prompt, maxTokens: 2048 };
+    return { system, prompt, maxTokens: lenSpec.maxTokens };
   }
   if (data.kind === "research") {
     const system =
@@ -88,14 +112,14 @@ function buildRequest(data: ParsedInput): { system: string; prompt: string; maxT
     const prompt =
       `Research topic: ${data.topic || "(derive from content)"}\n\n` +
       `Source content / notes:\n${data.content || "(none provided — use general knowledge about the topic above)"}`;
-    return { system, prompt, maxTokens: 3000 };
+    return { system, prompt, maxTokens: lenSpec.maxTokens };
   }
   const system =
     "You are an expert meeting facilitator. Produce a structured Markdown report with these exact headers in order: " +
     "## Meeting Summary, ## Key Discussion Points, ## Decisions Made, ## Action Items, ## Deadlines, ## Responsible Individuals. " +
     "Under Action Items use bullets formatted as: - [Owner] Task (Due: date if known)." + tail;
   const prompt = `Meeting title: ${data.title || "(untitled)"}\n\nRaw notes / transcript:\n${data.notes}`;
-  return { system, prompt, maxTokens: 3000 };
+  return { system, prompt, maxTokens: lenSpec.maxTokens };
 }
 
 export const generateAI = createServerFn({ method: "POST" })
