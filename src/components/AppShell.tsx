@@ -12,11 +12,12 @@ import {
   Sparkles,
   Bell,
   Search,
+  User as UserIcon,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { loadSettings, saveSettings } from "@/lib/storage";
+import { loadSettings, saveSettings, loadProfile, type UserProfile } from "@/lib/storage";
 import { Disclaimer } from "./Disclaimer";
 
 const NAV = [
@@ -25,6 +26,7 @@ const NAV = [
   { to: "/research", label: "Research Assistant", icon: BookOpen },
   { to: "/meetings", label: "Meeting Summarizer", icon: ClipboardList },
   { to: "/history", label: "History", icon: HistoryIcon },
+  { to: "/profile", label: "Profile", icon: UserIcon },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 
@@ -96,6 +98,16 @@ export function AppShell({
 }) {
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  useEffect(() => {
+    setProfile(loadProfile());
+    const sync = () => setProfile(loadProfile());
+    window.addEventListener("aih:profile", sync);
+    return () => window.removeEventListener("aih:profile", sync);
+  }, []);
+  const initials = profile?.name
+    ? profile.name.trim().split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase()
+    : "U";
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
@@ -144,9 +156,14 @@ export function AppShell({
             <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
               {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <div className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              U
-            </div>
+            <Link
+              to="/profile"
+              aria-label="Open profile"
+              className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-semibold text-white shadow ring-2 ring-background transition-transform hover:scale-105"
+              style={{ backgroundColor: profile?.avatarColor || "#6366f1" }}
+            >
+              {initials}
+            </Link>
           </div>
         </header>
 
