@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Copy, Download, RefreshCw, Save, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { downloadText, buildShareUrl, type ModuleKind } from "@/lib/storage";
-import { QuizGame } from "./QuizGame";
 
 export function OutputPanel({
   title,
@@ -89,15 +88,12 @@ export function OutputPanel({
       </header>
       <div className="min-h-[320px] flex-1 overflow-auto p-5">
         {loading ? (
-          <div className="flex h-full flex-col gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Generating with AI… meanwhile, try a quick quiz:
-            </div>
-            <QuizGame />
+          <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            Generating with AI…
           </div>
         ) : text ? (
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-foreground">
