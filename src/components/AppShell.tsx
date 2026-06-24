@@ -12,7 +12,6 @@ import {
   Sparkles,
   Bell,
   Search,
-  X,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -163,5 +162,3 @@ export function AppShell({
     </div>
   );
 }
-
-export { X as _X };
