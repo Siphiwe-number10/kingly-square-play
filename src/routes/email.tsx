@@ -17,7 +17,7 @@ import {
 import { Mail, Wand2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { generateAI } from "@/lib/ai.functions";
-import { loadSettings, lengthHint, personaHint, formatHint, creativityToTemperature, saveHistoryItem } from "@/lib/storage";
+import { loadSettings, saveHistoryItem } from "@/lib/storage";
 
 export const Route = createFileRoute("/email")({
   head: () => ({
@@ -69,16 +69,23 @@ function EmailPage() {
     setLoading(true);
     try {
       const s = loadSettings();
-      const system =
-        "You are an expert business email writer. Always produce a complete, well-structured email with these clearly labeled sections on separate lines: Subject:, Greeting:, Body:, Call to Action:, Closing:. " +
-        lengthHint(s.responseLength) + " " + personaHint(s.persona) + " " + formatHint(s.formatStyle);
-      const prompt =
-        `Compose an email with tone "${tone}" and length "${length}".\n` +
-        `Recipient name: ${name || "(unspecified)"}\n` +
-        `Recipient position: ${position || "(unspecified)"}\n` +
-        `Purpose: ${purpose}\n` +
-        `Key points:\n${points || "(none provided)"}`;
-      const res = await ai({ data: { system, prompt, temperature: creativityToTemperature(s.creativity) } });
+      const res = await ai({
+        data: {
+          kind: "email",
+          name,
+          position,
+          purpose,
+          points,
+          tone: tone as "Formal" | "Friendly" | "Persuasive" | "Professional" | "Appreciative" | "Apologetic",
+          length: length as "Short" | "Medium" | "Long",
+          settings: {
+            responseLength: s.responseLength,
+            persona: s.persona,
+            formatStyle: s.formatStyle,
+            creativity: s.creativity,
+          },
+        },
+      });
       setOutput(res.text);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "AI request failed");

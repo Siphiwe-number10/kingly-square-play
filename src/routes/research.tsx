@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, Wand2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { generateAI } from "@/lib/ai.functions";
-import { loadSettings, lengthHint, personaHint, formatHint, creativityToTemperature, saveHistoryItem } from "@/lib/storage";
+import { loadSettings, saveHistoryItem } from "@/lib/storage";
 
 export const Route = createFileRoute("/research")({
   head: () => ({
@@ -53,15 +53,19 @@ function ResearchPage() {
     setLoading(true);
     try {
       const s = loadSettings();
-      const system =
-        "You are a senior research analyst. Return a structured Markdown report with these exact section headers in this order: " +
-        "## Executive Summary, ## Key Findings, ## Insights, ## Recommendations, ## Future Considerations, ## Risk Analysis. " +
-        "Use concise bullet points where natural. " +
-        lengthHint(s.responseLength) + " " + personaHint(s.persona) + " " + formatHint(s.formatStyle);
-      const prompt =
-        `Research topic: ${topic || "(derive from content)"}\n\n` +
-        `Source content / notes:\n${content || "(none provided — use general knowledge about the topic above)"}`;
-      const res = await ai({ data: { system, prompt, maxTokens: 3000, temperature: creativityToTemperature(s.creativity) } });
+      const res = await ai({
+        data: {
+          kind: "research",
+          topic,
+          content,
+          settings: {
+            responseLength: s.responseLength,
+            persona: s.persona,
+            formatStyle: s.formatStyle,
+            creativity: s.creativity,
+          },
+        },
+      });
       setOutput(res.text);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "AI request failed");
