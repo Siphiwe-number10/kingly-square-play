@@ -138,6 +138,8 @@ function MeetingPage() {
           onSave={save}
           filename="meeting-report.md"
           emptyHint="Your structured meeting report will appear here."
+          module="meetings"
+          shareTitle={title || "Meeting summary"}
         />
       </div>
     </AppShell>

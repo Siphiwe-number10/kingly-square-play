@@ -139,6 +139,8 @@ function ResearchPage() {
           onSave={save}
           filename="research-report.md"
           emptyHint="Your structured research report will appear here."
+          module="research"
+          shareTitle={topic || "Research summary"}
         />
       </div>
     </AppShell>
