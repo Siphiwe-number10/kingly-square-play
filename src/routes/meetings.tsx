@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ClipboardList, Wand2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { generateAI } from "@/lib/ai.functions";
-import { loadSettings, lengthHint, saveHistoryItem } from "@/lib/storage";
+import { loadSettings, lengthHint, personaHint, formatHint, creativityToTemperature, saveHistoryItem } from "@/lib/storage";
 
 export const Route = createFileRoute("/meetings")({
   head: () => ({
@@ -57,10 +57,10 @@ function MeetingPage() {
         "You are an expert meeting facilitator. Produce a structured Markdown report with these exact headers in order: " +
         "## Meeting Summary, ## Key Discussion Points, ## Decisions Made, ## Action Items, ## Deadlines, ## Responsible Individuals. " +
         "Under Action Items use bullets formatted as: - [Owner] Task (Due: date if known). " +
-        lengthHint(s.responseLength);
+        lengthHint(s.responseLength) + " " + personaHint(s.persona) + " " + formatHint(s.formatStyle);
       const prompt =
         `Meeting title: ${title || "(untitled)"}\n\nRaw notes / transcript:\n${notes}`;
-      const res = await ai({ data: { system, prompt, maxTokens: 3000 } });
+      const res = await ai({ data: { system, prompt, maxTokens: 3000, temperature: creativityToTemperature(s.creativity) } });
       setOutput(res.text);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "AI request failed");

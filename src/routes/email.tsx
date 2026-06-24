@@ -17,7 +17,7 @@ import {
 import { Mail, Wand2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 import { generateAI } from "@/lib/ai.functions";
-import { loadSettings, lengthHint, saveHistoryItem } from "@/lib/storage";
+import { loadSettings, lengthHint, personaHint, formatHint, creativityToTemperature, saveHistoryItem } from "@/lib/storage";
 
 export const Route = createFileRoute("/email")({
   head: () => ({
@@ -71,14 +71,14 @@ function EmailPage() {
       const s = loadSettings();
       const system =
         "You are an expert business email writer. Always produce a complete, well-structured email with these clearly labeled sections on separate lines: Subject:, Greeting:, Body:, Call to Action:, Closing:. " +
-        lengthHint(s.responseLength);
+        lengthHint(s.responseLength) + " " + personaHint(s.persona) + " " + formatHint(s.formatStyle);
       const prompt =
         `Compose an email with tone "${tone}" and length "${length}".\n` +
         `Recipient name: ${name || "(unspecified)"}\n` +
         `Recipient position: ${position || "(unspecified)"}\n` +
         `Purpose: ${purpose}\n` +
         `Key points:\n${points || "(none provided)"}`;
-      const res = await ai({ data: { system, prompt } });
+      const res = await ai({ data: { system, prompt, temperature: creativityToTemperature(s.creativity) } });
       setOutput(res.text);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "AI request failed");
@@ -185,6 +185,8 @@ function EmailPage() {
           onSave={save}
           filename="email.txt"
           emptyHint="Your AI-drafted email will appear here."
+          module="email"
+          shareTitle={purpose || "Generated email"}
         />
       </div>
     </AppShell>
