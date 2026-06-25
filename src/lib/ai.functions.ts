@@ -19,7 +19,7 @@ const EmailInput = z.object({
   purpose: z.string().min(1).max(400),
   points: z.string().max(2000).optional().default(""),
   tone: z.enum(["Formal", "Friendly", "Persuasive", "Professional", "Appreciative", "Apologetic"]),
-  length: z.enum(["Short", "Medium", "Long"]),
+  length: z.enum(["Short", "Medium"]),
   settings: SettingsInput,
 });
 
@@ -60,10 +60,8 @@ function lengthSpec(s: z.infer<typeof ResponseLength>) {
 }
 
 // Map the email-specific length control to the same response-length scale.
-function emailLengthToResponseLength(l: "Short" | "Medium" | "Long"): z.infer<typeof ResponseLength> {
-  if (l === "Short") return "short";
-  if (l === "Long") return "long";
-  return "medium";
+function emailLengthToResponseLength(l: "Short" | "Medium"): z.infer<typeof ResponseLength> {
+  return l === "Short" ? "short" : "medium";
 }
 function personaHint(p: z.infer<typeof Persona>) {
   switch (p) {
@@ -88,9 +86,16 @@ function creativityToTemperature(c: number) {
 
 function buildRequest(data: ParsedInput): { system: string; prompt: string; maxTokens: number } {
   const s = data.settings;
-  // For emails the user picks a length directly on the form — honor that over the global setting.
-  const effectiveLength =
-    data.kind === "email" ? emailLengthToResponseLength(data.length) : s.responseLength;
+  // Per-module length policy:
+  //  - email: user picks Short or Medium on the form
+  //  - meeting: always short
+  //  - research: always medium
+  const effectiveLength: z.infer<typeof ResponseLength> =
+    data.kind === "email"
+      ? emailLengthToResponseLength(data.length)
+      : data.kind === "meeting"
+        ? "short"
+        : "medium";
   const lenSpec = lengthSpec(effectiveLength);
   const tail = ` ${lenSpec.hint} ${personaHint(s.persona)} ${formatHint(s.formatStyle)}`;
   if (data.kind === "email") {
