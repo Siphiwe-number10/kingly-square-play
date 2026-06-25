@@ -38,7 +38,7 @@ export const Route = createFileRoute("/email")({
 });
 
 const TONES = ["Formal", "Friendly", "Persuasive", "Professional", "Appreciative", "Apologetic"];
-const LENGTHS = ["Short", "Medium", "Long"];
+const LENGTHS = ["Short", "Medium"];
 
 function EmailPage() {
   const ai = useServerFn(generateAI);
@@ -77,7 +77,7 @@ function EmailPage() {
           purpose,
           points,
           tone: tone as "Formal" | "Friendly" | "Persuasive" | "Professional" | "Appreciative" | "Apologetic",
-          length: length as "Short" | "Medium" | "Long",
+          length: length as "Short" | "Medium",
           settings: {
             responseLength: s.responseLength,
             persona: s.persona,

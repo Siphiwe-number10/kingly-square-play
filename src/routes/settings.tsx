@@ -60,21 +60,6 @@ function SettingsPage() {
         </Card>
 
         <Card title="AI Output">
-          <Row label="Response length">
-            <Select
-              value={s.responseLength}
-              onValueChange={(v) => update("responseLength", v as AppSettings["responseLength"])}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="short">Short</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="long">Long</SelectItem>
-              </SelectContent>
-            </Select>
-          </Row>
           <Row label="Voice / persona">
             <Select
               value={s.persona}
